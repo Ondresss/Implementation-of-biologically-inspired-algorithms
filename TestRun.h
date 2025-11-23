@@ -26,10 +26,69 @@
 #include <iostream>
 
 #include "FireFlyAlgorithm.h"
-
+#include "TeachingLearningBasedOptimization.h"
+#include "XlsWriter.h"
 
 class TestRun {
 public:
+
+    static void runXlsTest() {
+        std::vector<std::shared_ptr<Function>> functions = {
+            std::make_shared<Sphere>("Sphere", 0.1),
+            std::make_shared<Rastrigin>("Rastrigin", 0.1),
+            std::make_shared<Levy>("Levy", 0.1),
+            std::make_shared<Rosenbrock>("Rosenbrock", 0.1),
+            std::make_shared<Griewank>("Griewank", 0.05),
+            std::make_shared<Schwefel>("Schwefel"),
+            std::make_shared<Zakharov>("Zakharov", 0.1),
+            std::make_shared<Michalewicz>("Michalewicz", 0.05, 10),
+            std::make_shared<Ackley>("Ackley", 0.25f),
+        };
+        int dimension = 30;
+        std::tuple<int,int> bounds = {-5, 5};
+        int NP = 30;
+        int F = 8;
+        int CR = 9;
+        int c1 = 2;                             // Koeficient osobní složky
+        int c2 = 2;                             // Koeficient globální složky
+        int minVel = -10;                       // Min. rychlost
+        int maxVel = 10;
+        FireFlyAlgorithm::Parameters params = {0.4, 1.2, 0.7};
+        std::vector<std::shared_ptr<Solution>> solutions;
+        solutions.push_back(std::make_shared<DifferentialEvolution>(dimension, bounds, NP, F, CR));
+        solutions.push_back(std::make_shared<ParticleSwarmOptimization>(dimension, bounds, NP, c1, c2, minVel, maxVel));
+        solutions.push_back(std::make_shared<SomaAllToOne>(dimension, bounds, NP, 0.15, 0.3, 3.0));
+        solutions.push_back(std::make_shared<FireFlyAlgorithm>(dimension, bounds, NP, params));
+        solutions.push_back(std::make_shared<TeachingLearningBasedOptimization>(dimension, bounds, NP));
+
+
+        XlsWriter xlsWriter(solutions,functions);
+        xlsWriter.write(10,30);
+    }
+
+
+    static void runTextTLBO() {
+        std::vector<std::shared_ptr<Function>> functions = {
+            std::make_shared<Sphere>("Sphere", 0.1),
+            std::make_shared<Rastrigin>("Rastrigin", 0.1),
+            std::make_shared<Levy>("Levy", 0.1),
+            std::make_shared<Rosenbrock>("Rosenbrock", 0.1),
+            std::make_shared<Griewank>("Griewank", 0.05),
+            std::make_shared<Schwefel>("Schwefel"),
+            std::make_shared<Zakharov>("Zakharov", 0.1),
+            std::make_shared<Michalewicz>("Michalewicz", 0.05, 10),
+            std::make_shared<Ackley>("Ackley", 0.25f),
+        };
+        int dimension = 2;
+        std::tuple<int,int> bounds = {-5, 5};
+        int popSize = 30;
+        for (const auto& f : functions) {
+            TeachingLearningBasedOptimization tlbo(dimension, bounds, popSize);
+
+            tlbo.run(f,15);
+            tlbo.visualize();
+        }
+    }
 
 
     static void runTestFireFly() {
@@ -175,157 +234,5 @@ public:
 
     }
 
-   static void runTestSimulatedAnnealing() {
-    std::shared_ptr<Function> ackley      = std::make_shared<Ackley>("Ackley", 0.25f);
-    std::shared_ptr<Function> rastrigin   = std::make_shared<Rastrigin>("Rastrigin", 0.1);
-    std::shared_ptr<Function> griewank    = std::make_shared<Griewank>("Griewank", 0.05);
-    std::shared_ptr<Function> rosenbrock  = std::make_shared<Rosenbrock>("Rosenbrock", 0.1);
-    std::shared_ptr<Function> michalewicz = std::make_shared<Michalewicz>("Michalewicz", 0.05, 10);
-    std::shared_ptr<Function> schwefel    = std::make_shared<Schwefel>("Schwefel");
-    std::shared_ptr<Function> sphere      = std::make_shared<Sphere>("Sphere", 0.1);
-    std::shared_ptr<Function> zakharov    = std::make_shared<Zakharov>("Zakharov", 0.1);
-    std::shared_ptr<Function> levy        = std::make_shared<Levy>("Levy", 0.1);
-
-    SimulatedAnnealing simulatedAnnealingAckley(3, std::make_tuple(-32.768, 32.768), 60, 0.4, 1e-4, 10.0, 0.90);
-    SimulatedAnnealing simulatedAnnealingRastrigin(3, std::make_tuple(-5.12, 5.12), 60, 0.4, 1e-4, 10.0, 0.90);
-    SimulatedAnnealing simulatedAnnealingGriewank(3, std::make_tuple(-10, 10),       20, 0.4, 1e-4, 10.0, 0.90);
-    SimulatedAnnealing simulatedAnnealingRosenbrock(3, std::make_tuple(-5,10), 60, 0.4, 1e-4, 10.0, 0.90);
-    SimulatedAnnealing simulatedAnnealingMichalewicz(3, std::make_tuple(0, EIGEN_PI),   60, 0.4, 1e-4, 10.0, 0.90);
-    SimulatedAnnealing simulatedAnnealingSchwefel(3, std::make_tuple(-500, 500),        60, 0.4, 1e-4, 10.0, 0.90);
-    SimulatedAnnealing simulatedAnnealingSphere(3, std::make_tuple(-5.12, 5.12),        60, 0.4, 1e-4, 10.0, 0.90);
-    SimulatedAnnealing simulatedAnnealingZakharov(3, std::make_tuple(-10, 10),        60, 0.4, 1e-4, 10.0, 0.90);
-    SimulatedAnnealing simulatedAnnealingLevy(3, std::make_tuple(-10, 10),              60, 0.4, 1e-4, 10.0, 0.90);
-    //
-    // simulatedAnnealingAckley.run(ackley, 1000);
-    // simulatedAnnealingAckley.visualize();
-
-    // simulatedAnnealingRastrigin.run(rastrigin, 1000);
-    // simulatedAnnealingRastrigin.visualize();
-
-    // simulatedAnnealingGriewank.run(griewank, 10000);
-    // simulatedAnnealingGriewank.visualize();
-    //
-    // simulatedAnnealingRosenbrock.run(rosenbrock, 1000);
-    // simulatedAnnealingRosenbrock.visualize();
-    //
-    // simulatedAnnealingMichalewicz.run(michalewicz, 1000);
-    // simulatedAnnealingMichalewicz.visualize();
-    //
-    // simulatedAnnealingSchwefel.run(schwefel, 1000);
-    // simulatedAnnealingSchwefel.visualize();
-    //
-    // simulatedAnnealingSphere.run(sphere, 1000);
-    // simulatedAnnealingSphere.visualize();
-    // //
-    // simulatedAnnealingZakharov.run(zakharov, 1000);
-    // simulatedAnnealingZakharov.visualize();
-    //
-    simulatedAnnealingLevy.run(levy, 1000);
-    simulatedAnnealingLevy.visualize();
-}
-
-
-    static void runGeneticAlgorithmTSP() {
-       std::random_device rd;
-       std::mt19937 rng(rd());
-       std::uniform_int_distribution<int> cityCountDist(20, 40);
-       int numCities = cityCountDist(rng);
-
-       std::uniform_real_distribution<double> coordDist(0.0, 200.0);
-       std::vector<GeneticAlgorithmTSP::Point> cities(numCities);
-       for (int i = 0; i < numCities; ++i) {
-           cities[i].x = coordDist(rng);
-           cities[i].y = coordDist(rng);
-       }
-
-       int populationSize = 50;
-       int generations = 200;
-       GeneticAlgorithmTSP ga(numCities, cities, populationSize);
-
-       ga.run(generations);
-
-       ga.visualize();
-
-       matplot::show();
-   }
-
-    static void runTest1HillClimbing() {
-        BlindSearch blind_search(3,std::make_tuple(-5.12, 5.13));
-        HillClimbing hillClimbing(3,std::make_tuple(-5.12, 5.13),50,1.0);
-        BlindSearch blindSearchAckley(3,std::make_tuple(-32.768, 32.768));
-        HillClimbing hillClimbingAckley(3,std::make_tuple(-32.768, 32.768),70,0.5);
-        BlindSearch blindSearchZakharov(3,std::make_tuple(-5,10));
-        HillClimbing hillClimbingZakharov(3,std::make_tuple(-5,10),30,0.5);
-        BlindSearch blindSearchRosenbrock(3,std::make_tuple(-5,10));
-        HillClimbing hillClimbingRosenbrock(3,std::make_tuple(-5, 10),60,0.5);
-        BlindSearch blindSearchMichalewicz(3,std::make_tuple(0,EIGEN_PI));
-        HillClimbing hillClimbingMichalewicz(3,std::make_tuple(0, EIGEN_PI),60,0.5);
-        BlindSearch blindSearchRastrigin(3,std::make_tuple(-5.12, 5.12));
-        HillClimbing hillClimbingRastrigin(3,std::make_tuple(-5.12, 5.12),60,0.5);
-        HillClimbing hillClimbingGriewank(3,std::make_tuple(-50,50),60,0.5);
-        BlindSearch blindSearchGriewank(3,std::make_tuple(-600,600));
-        HillClimbing hillClimbingSchwefel(3,std::make_tuple(-500,500),60,0.5);
-        BlindSearch blindSearchSchwefel(3,std::make_tuple(-500, 500));
-        HillClimbing hillClimbingLevy(3,std::make_tuple(-10,10),60,0.5);
-        BlindSearch blindSearchLevy(3,std::make_tuple(-10, 10));
-
-
-        std::shared_ptr<Function> ackley = std::make_shared<Ackley>("Ackley",0.25f);
-        std::shared_ptr<Function> rastrigin = std::make_shared<Rastrigin>("Rastrigin",0.1);
-        std::shared_ptr<Function> griewank = std::make_shared<Griewank>("Griewank",0.05);
-        std::shared_ptr<Function> rosenbrock = std::make_shared<Rosenbrock>("Rosenbrock",0.1);
-        std::shared_ptr<Function> michalewicz = std::make_shared<Michalewicz>("Michalewicz",0.05,10);
-        std::shared_ptr<Function> schwefel = std::make_shared<Schwefel>("Schwefel");
-        std::shared_ptr<Function> sphere = std::make_shared<Sphere>("Sphere",0.1);
-        std::shared_ptr<Function> zakharov = std::make_shared<Zakharov>("Zakharov",0.1);
-        std::shared_ptr<Function> levy = std::make_shared<Levy>("Levy",0.1);
-
-
-        hillClimbingGriewank.run(griewank,1000);
-        hillClimbingGriewank.visualize();
-
-        hillClimbingAckley.run(ackley,100);
-        hillClimbingAckley.visualize();
-
-        hillClimbing.run(sphere,10000);
-        hillClimbing.visualize();
-        // blind_search.run(sphere,10000);
-        // blind_search.visualize();
-
-
-        hillClimbingZakharov.run(zakharov,10000);
-        hillClimbingZakharov.visualize();
-        // blindSearchZakharov.run(zakharov,10000);
-        // blindSearchZakharov.visualize();
-
-        hillClimbingRosenbrock.run(rosenbrock,10000);
-        hillClimbingRosenbrock.visualize();
-        // blindSearchRosenbrock.run(rosenbrock,10000);
-        // blindSearchRosenbrock.visualize();
-
-        hillClimbingMichalewicz.run(michalewicz,500);
-        hillClimbingMichalewicz.visualize();
-        // blindSearchMichalewicz.run(michalewicz,10000);
-        // blindSearchMichalewicz.visualize();
-        //
-        hillClimbingRastrigin.run(rastrigin,10000);
-        hillClimbingRastrigin.visualize();
-        // blindSearchRastrigin.run(rastrigin,10000);
-        // blindSearchRastrigin.visualize();
-
-        hillClimbingSchwefel.run(schwefel,10000);
-        hillClimbingSchwefel.visualize();
-        // blindSearchSchwefel.run(schwefel,10000);
-        // blindSearchSchwefel.visualize();
-
-        hillClimbingLevy.run(levy,10000);
-        hillClimbingLevy.visualize();
-        // blindSearchLevy.run(levy,10000);
-        // blindSearchLevy.visualize();
-
-        // blindSearchGriewank.run(griewank,10000);
-        // blindSearchGriewank.visualize();
-
-    }
 
 };

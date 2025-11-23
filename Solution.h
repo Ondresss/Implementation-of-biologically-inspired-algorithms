@@ -16,6 +16,7 @@ public:
     virtual ~Solution() {}
     virtual void visualize();
     virtual void run(std::shared_ptr<Function> f,int noIterations) = 0;
+    virtual double getBestSolution() = 0;
     virtual std::string getName() = 0;
     [[nodiscard]] double getBest() const {return this->f_best;}
     [[nodiscard]] std::tuple<Eigen::VectorXd,double> getBestResult() const { return this->bestResult; }

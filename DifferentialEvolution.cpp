@@ -88,7 +88,18 @@ void DifferentialEvolution::visualize() {
     ax->grid(true);
 
 }
+
+
+
+double DifferentialEvolution::getBestSolution() {
+    auto bestSolution = std::min_element(this->initPopulation.begin(), this->initPopulation.end(),[this](const auto& x, const auto& y) {
+        return this->f->evaluate(x) < this->f->evaluate(y);
+    });
+    double bestFitness = this->f->evaluate(*bestSolution);
+    return bestFitness;
+}
 void DifferentialEvolution::run(std::shared_ptr<Function> f, int noIterations) {
+    std::cout << "DE running.." << std::endl;
     this->f = f;
     this->generateInitialPopulation();
     int g = 0;
@@ -147,8 +158,10 @@ void DifferentialEvolution::run(std::shared_ptr<Function> f, int noIterations) {
 
         // Nahrazení populace
         this->initPopulation = std::move(newPopulation);
+        std::cout << "DE iteration: " << g << std::endl;
         g++;
     }
+    std::cout << "DE ended " << std::endl;
 }
 
 

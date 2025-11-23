@@ -10,6 +10,7 @@
 
 
     void ParticleSwarmOptimization::run (std::shared_ptr<Function> f, int noIterations) {
+        std::cout << "PSO running" << std::endl;
         this->f = f;
         this->historyPopulation.clear();
         this->generateInitialPopulation();
@@ -34,9 +35,7 @@
                 auto& x = std::get<1>(pair);
                 Eigen::VectorXd newVelocity = this->calculateVelocity(x,i,noIterations,this->currentBestParticle->parameters);
                 Eigen::VectorXd newParameters = x->parameters + newVelocity;
-                std::cout << "Before: " << newParameters << std::endl;
                 this->clampParameters(newParameters);
-                std::cout << "After: " << newParameters << std::endl;
                 double newFitness = this->f->evaluate(newParameters);
                 double bestPersonalFitness = this->f->evaluate(x->pBest);
                 x->velocity = newVelocity;
@@ -50,9 +49,21 @@
                 std::cerr << "No individuals found!" << std::endl;
                 std::exit(-1);
             }
+            std::cout << "PSO iteration: " << i << std::endl;
             i++;
         }
+        std::cout << "PSO ending" << std::endl;
     }
+
+
+double ParticleSwarmOptimization::getBestSolution() {
+        auto bestIndividual = std::min_element(this->initPopulation.begin(), this->initPopulation.end(),[this](const auto& lhs, const auto& rhs) {
+              return this->f->evaluate(lhs->parameters) < this->f->evaluate(rhs->parameters);
+        });
+        double bestFitness = this->f->evaluate((*bestIndividual)->parameters);
+        return bestFitness;
+}
+
 
 void ParticleSwarmOptimization::clampParameters(Eigen::VectorXd& params) const {
         auto [boundsX, boundsY] = this->f->getOfficialBounds();

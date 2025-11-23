@@ -5,6 +5,7 @@
 #include "FireFlyAlgorithm.h"
 
 void FireFlyAlgorithm::run(std::shared_ptr<Function> f, int noIterations) {
+    std::cout << "Firefly running" << std::endl;
     this->f = f;
     this->initialiseFireFlies();
     this->fireFliesHistory.clear();
@@ -24,9 +25,21 @@ void FireFlyAlgorithm::run(std::shared_ptr<Function> f, int noIterations) {
             fireFly.fitness = this->f->evaluate(fireFly.parameters);
         }
         this->fireFliesHistory.push_back(this->fireFlies);
+        std::cout << "Firefly iteration: " << iter++ << std::endl;
         iter++;
     }
+    std::cout << "Firefly ended " << std::endl;
 }
+
+
+double FireFlyAlgorithm::getBestSolution() {
+    auto it = std::min_element(fireFlies.begin(), fireFlies.end(),
+                           [](const FireFly& a, const FireFly& b){ return a.fitness < b.fitness; });
+    double bestFitness = this->f->evaluate((*it).parameters);
+    return bestFitness;
+
+}
+
 
 void FireFlyAlgorithm::visualize() {
     using namespace matplot;

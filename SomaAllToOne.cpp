@@ -1,30 +1,37 @@
-//
-// Created by andrew on 24/10/2025.
-//
-
 #include "SomaAllToOne.h"
-
 #include <random>
+#include <algorithm>
+#include <iostream>
 
 void SomaAllToOne::run(std::shared_ptr<Function> f, int noIterations) {
+    std::cout << "SOMA running" << std::endl;
     this->f = f;
-    int m = 0;
+
+    // Vyčistit předchozí běhy
+    this->initialPopulation.clear();
+    this->foundLeaders.clear();
+    this->historyPopulations.clear();
+
     const int noMigrations = noIterations;
     this->generateInitialPopulation();
-    this->historyPopulations.clear();
+
+    int m = 0;
     while (m < noMigrations) {
-        for (const auto& p : std::views::enumerate(this->initialPopulation)) {
-            auto& x = std::get<1>(p);
-            Individual& leader = this->findLeader();
-            this->foundLeaders.push_back(leader);
-            const auto& leaderParams = leader.parameters;
-            for (double t = 0; t < this->pathLength + 1e-12; t+=this->step) {
-                auto PrtVector = this->generatePRTVector();
-                Eigen::VectorXd newParameters = Eigen::VectorXd::Zero(this->dimension);
-                for (int d = 0; d < this->dimension;++d) {
+        Individual leader = this->findLeader();
+        this->foundLeaders.push_back(leader);
+
+        for (auto &x : this->initialPopulation) {
+            const auto &leaderParams = leader.parameters;
+            for (double t = 0.0; t <= this->pathLength + 1e-12; t += this->step) {
+                Eigen::VectorXd PrtVector = this->generatePRTVector();
+                Eigen::VectorXd newParameters = x.parameters;
+
+                for (int d = 0; d < this->dimension; ++d) {
                     newParameters(d) = x.parameters(d) + t * (leaderParams(d) - x.parameters(d)) * PrtVector(d);
                 }
+
                 this->clampParameters(newParameters);
+
                 double newFitness = this->f->evaluate(newParameters);
                 if (newFitness < x.fitness) {
                     x.fitness = newFitness;
@@ -32,8 +39,75 @@ void SomaAllToOne::run(std::shared_ptr<Function> f, int noIterations) {
                 }
             }
         }
+
         this->historyPopulations.push_back(this->initialPopulation);
-        m++;
+
+        std::cout << "SOMA iteration: " << m << " best: " << this->getBestSolution() << std::endl;
+        ++m;
+    }
+
+    std::cout << "SOMA ended" << std::endl;
+}
+
+double SomaAllToOne::getBestSolution() {
+    if (this->initialPopulation.empty()) {
+        return std::numeric_limits<double>::infinity();
+    }
+    // použijem uloženou fitness hodnotu místo opětovného volání evaluate
+    const auto &leaderIt = std::min_element(this->initialPopulation.begin(),
+                                            this->initialPopulation.end(),
+                                            [](const Individual &a, const Individual &b) {
+                                                return a.fitness < b.fitness;
+                                            });
+    return leaderIt->fitness;
+}
+
+Eigen::VectorXd SomaAllToOne::generatePRTVector() {
+    Eigen::VectorXd result(this->dimension);
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    for (int i = 0; i < this->dimension; ++i) {
+        result(i) = (dist(this->rng) < this->PRT) ? 1.0 : 0.0;
+    }
+    return result;
+}
+
+SomaAllToOne::Individual SomaAllToOne::findLeader() {
+    if (this->initialPopulation.empty()) {
+        throw std::runtime_error("findLeader(): initialPopulation is empty");
+    }
+
+    auto it = std::min_element(this->initialPopulation.begin(),
+                               this->initialPopulation.end(),
+                               [](const Individual &a, const Individual &b) {
+                                   return a.fitness < b.fitness;
+                               });
+    return *it; // vrátíme kopii leadera
+}
+
+void SomaAllToOne::generateInitialPopulation() {
+    this->initialPopulation.clear();
+    this->initialPopulation.reserve(this->popSize);
+
+    for (int i = 0; i < this->popSize; ++i) {
+        Eigen::VectorXd params = this->generateRandomSolution();
+        double fitness = this->f->evaluate(params);
+        Individual ind;
+        ind.parameters = params;
+        ind.fitness = fitness;
+        this->initialPopulation.push_back(std::move(ind));
+    }
+}
+
+void SomaAllToOne::clampParameters(Eigen::VectorXd &params) const {
+    auto [boundsX, boundsY] = this->f->getOfficialBounds();
+    const auto& [xmin, xmax] = boundsX;
+    const auto& [ymin, ymax] = boundsY;
+
+    for (int j = 0; j < this->dimension; ++j) {
+        if (j == 0)
+            params(j) = std::clamp(params(j), xmin, xmax);
+        else
+            params(j) = std::clamp(params(j), ymin, ymax);
     }
 }
 
@@ -101,44 +175,4 @@ void SomaAllToOne::visualize() {
     ax->zlabel("Z");
     ax->grid(true);
 
-}
-Eigen::VectorXd SomaAllToOne::generatePRTVector() {
-    Eigen::VectorXd result = Eigen::VectorXd::Zero(this->dimension);
-    std::uniform_real_distribution<double> dist(0, 1);
-    for (int i = 0; i < this->dimension; ++i) {
-        if (dist(this->rng) < this->PRT) {
-            result(i) = 1;
-        } else {
-            result(i) = 0;
-        }
-    }
-    return result;
-}
-
-SomaAllToOne::Individual& SomaAllToOne::findLeader() {
-    Individual& leader = *std::min_element(this->initialPopulation.begin(), this->initialPopulation.end(),[this](const auto& x,const auto& y) {
-        return this->f->evaluate(x.parameters) < this->f->evaluate(y.parameters);
-    });
-    return leader;
-}
-
-void SomaAllToOne::generateInitialPopulation() {
-    for (int i = 0; i < this->popSize;++i) {
-        auto params = this->generateRandomSolution();
-        Individual ind = {this->f->evaluate(params),params};
-        this->initialPopulation.push_back(ind);
-    }
-}
-
-void SomaAllToOne::clampParameters(Eigen::VectorXd& params) const {
-    auto [boundsX, boundsY] = this->f->getOfficialBounds();
-    const auto& [xmin, xmax] = boundsX;
-    const auto& [ymin, ymax] = boundsY;
-
-    for (int j = 0; j < this->dimension; ++j) {
-        if (j == 0)
-            params(j) = std::clamp(params(j), xmin, xmax);
-        else if (j == 1)
-            params(j) = std::clamp(params(j), ymin, ymax);
-    }
 }

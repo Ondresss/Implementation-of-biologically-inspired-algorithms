@@ -23,7 +23,8 @@ public:
     }
     void run(std::shared_ptr<Function> f, int noIterations) override;
     void visualize() override;
-    std::string getName() override { return "ParticleSwarmOptimization"; };
+    std::string getName() override { return "PSO"; };
+    double getBestSolution() override;
 private:
     int popSize;
     std::tuple<int,int> learningConstants;

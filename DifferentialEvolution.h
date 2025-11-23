@@ -12,8 +12,8 @@ public:
     ,mutationConstant(F),crossoverRange(CR),rng(std::random_device()()),uniformIndices(0,NP-1),uniformDimension(0,dimension),probability(0.0f,1.0f) {}
     void visualize() override;
     void run(std::shared_ptr<Function> f, int noIterations) override;
-    std::string getName() override { return "Differential Evolution"; }
-
+    std::string getName() override { return "DE"; }
+    double getBestSolution() override;
 private:
     int noIndividuals;
     int mutationConstant;

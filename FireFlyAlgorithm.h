@@ -21,10 +21,12 @@ public:
     };
     void run(std::shared_ptr<Function> f, int noIterations) override;
     void visualize() override;
-    FireFlyAlgorithm(int dimension,const std::tuple<int,int>& bounds,const int noFireFlies,const Parameters& params)
+    FireFlyAlgorithm(int dimension,const std::tuple<int,int>& bounds,const int noFireFlies,Parameters params)
     : Solution(dimension,bounds), noFireFlies(noFireFlies), params(params),rng(std::random_device{}()) {}
 
-    std::string getName() override { return "FireFlyAlgorithm"; };
+    std::string getName() override { return "FA"; };
+
+    double getBestSolution() override;
 private:
     int noFireFlies;
     Parameters params;

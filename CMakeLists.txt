@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 find_package(Matplot++ REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+
 add_executable(BIA main.cpp
         Solution.h
         Function.h
@@ -45,9 +46,22 @@ add_executable(BIA main.cpp
         AntColonyOptimization.cpp
         AntColonyOptimization.h
         FireFlyAlgorithm.cpp
-        FireFlyAlgorithm.h)
+        FireFlyAlgorithm.h
+        TeachingLearningBasedOptimization.cpp
+        TeachingLearningBasedOptimization.h
+        XlsWriter.cpp
+        XlsWriter.h
+        NSGAII.cpp
+        NSGAII.h)
 
+include_directories(/usr/local/include)
+link_directories(/usr/local/lib)
 
-target_link_libraries(BIA PRIVATE Matplot++::matplot)
-target_link_options(BIA PRIVATE -fsanitize=address,undefined)
+target_link_libraries(BIA PRIVATE
+        Matplot++::matplot
+        xlsxwriter
+        z
+)
+
 target_include_directories(BIA PRIVATE ${EIGEN3_INCLUDE_DIR})
+

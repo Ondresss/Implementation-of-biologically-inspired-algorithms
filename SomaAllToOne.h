@@ -18,8 +18,8 @@ public:
 
     void run(std::shared_ptr<Function> f, int noIterations) override;
     void visualize() override;
-    std::string getName() override { return "SOMA AllToOne"; };
-
+    std::string getName() override { return "SOMA       "; };
+    double getBestSolution() override;
 private:
     int popSize;
     double step;
@@ -30,7 +30,7 @@ private:
     std::vector<std::vector<Individual>> historyPopulations;
     std::vector<Individual> foundLeaders;
     Eigen::VectorXd generatePRTVector();
-    Individual& findLeader();
+    Individual findLeader();
     void generateInitialPopulation();
     void clampParameters(Eigen::VectorXd& params) const;
 };

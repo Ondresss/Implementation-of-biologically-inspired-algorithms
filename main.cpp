@@ -7,7 +7,7 @@ int main(void) {
     //TestRun::runTestParticleSwarmOptimization();
     //TestRun::runTestAntColonyOptimization();
 
-    TestRun::runTestFireFly();
-    matplot::show();
+    TestRun::runTextTLBO();
+    //TestRun::runXlsTest();
     std::exit(EXIT_SUCCESS);
 }
